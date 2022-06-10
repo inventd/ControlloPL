@@ -141,11 +141,7 @@ byte controlloGate(byte statoGate, byte ingressi, int *contaAssi)
         statoProssimo = GATE_OCCUPATO;
       }
       else if (ingressi == SENS_NULL)
-      {
-        (*contaAssi)--;
-        //((*contaAssi) > 0) ? *contaAssi : 0;
         statoProssimo = GATE_LIBERO;
-      }
     }
     break;
   case GATE_OCCUPATO:
@@ -153,7 +149,11 @@ byte controlloGate(byte statoGate, byte ingressi, int *contaAssi)
     {
       statoProssimo = GATE_ERRORE;
       if (ingressi == SENS_INGRESSO)
+      {
+        (*contaAssi)--;
+        (*contaAssi) = ((*contaAssi) > 0) ? *contaAssi : 0;
         statoProssimo = GATE_INGRESSO;
+      }
       else if (ingressi == SENS_USCITA)
         statoProssimo = GATE_USCITA;
     }
