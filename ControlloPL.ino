@@ -1,3 +1,5 @@
+#include <Servo.h>
+
 #define NUMERO_DI_74HC165 2
 #define DATA_WIDTH NUMERO_DI_74HC165 * 8
 
@@ -52,10 +54,14 @@ int contaAssiPL2 = 0;
 byte statoPL3;
 int contaAssiPL3 = 0;
 
+Servo servoPL1;
+
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
+
+  servoPL1.attach(3);
 
   // Configurazione linee per gestione shift register 74HC165
 #ifdef INPUT_SERIAL
@@ -88,6 +94,7 @@ void loop()
     oldLetturaSensori = letturaSensori;
     cicloMacchinaStati(letturaSensori);
     visualizzaStato();
+    servoPL1.write((contaAssiPL1 > 0) ? 0 : 180);
   }
 }
 
