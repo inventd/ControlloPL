@@ -142,7 +142,8 @@ byte controlloGate(byte statoGate, byte ingressi, int *contaAssi)
       }
       else if (ingressi == SENS_NULL)
       {
-        (*contaAssi) = (--(*contaAssi) > 0) ? *contaAssi : 0;
+        (*contaAssi)--;
+        //((*contaAssi) > 0) ? *contaAssi : 0;
         statoProssimo = GATE_LIBERO;
       }
     }
@@ -252,4 +253,11 @@ void visualizzaStato()
 {
   Serial.print("Stato ingressi ultima lettura: ");
   Serial.println(FRMT_BIN_8(letturaSensori));
+  Serial.print("Conta assi PL [1] [2] [3] ->  [");
+  Serial.print(contaAssiPL1);
+  Serial.print("]  [");
+  Serial.print(contaAssiPL2);
+  Serial.print("]  [");
+  Serial.print(contaAssiPL3);
+  Serial.println("]");
 }
