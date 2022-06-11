@@ -4,6 +4,7 @@
 #define DATA_WIDTH NUMERO_DI_74HC165 * 8
 
 #undef INPUT_SERIAL
+#define SIMULATORE
 
 /*
  * Defiinizione pin_out
@@ -45,13 +46,20 @@
 #define SENS_USCITA B0010
 #define SENS_FULL B0011
 
+// stati sbarra
+#define SBARRA_ABBASSATA 0
+#define SBARRA_ALZATA 1
+
 unsigned long letturaSensori;
 unsigned long oldLetturaSensori;
 byte statoPL1;
+byte statoSbarraPL1 = SBARRA_ALZATA;
 int contaAssiPL1 = 0;
 byte statoPL2;
+byte statoSbarraPL2 = SBARRA_ALZATA;
 int contaAssiPL2 = 0;
 byte statoPL3;
+byte statoSbarraPL3 = SBARRA_ALZATA;
 int contaAssiPL3 = 0;
 
 Servo servoPL1;
@@ -85,16 +93,18 @@ void setup()
 
 void loop()
 {
-  // letturaSensori = leggiSensoriPL();
-
+#ifdef SIMULATORE
   letturaSensori = simulaIngressi(oldLetturaSensori);
+#else
+  letturaSensori = leggiSensoriPL();
+#endif
 
   if (letturaSensori != oldLetturaSensori)
   {
     oldLetturaSensori = letturaSensori;
     cicloMacchinaStati(letturaSensori);
+    movimentaPL();
     visualizzaStato();
-    servoPL1.write((contaAssiPL1 > 0) ? 0 : 180);
   }
 }
 
@@ -206,6 +216,31 @@ unsigned long leggiSensoriPL()
 #endif
 
   return (bytesVal);
+}
+
+void movimentaPL()
+{
+  if (contaAssiPL1 > 0)
+  {
+    // Abbassa sbarra
+    if (statoSbarraPL1 == SBARRA_ALZATA)
+    {
+      servoPL1.write(70);
+      delay(300);
+      servoPL1.write(90);
+      statoSbarraPL1 = SBARRA_ABBASSATA;
+    }
+  } else
+  {
+    /* Alza la sbarra */
+    if (statoSbarraPL1 == SBARRA_ABBASSATA)
+    {
+      servoPL1.write(110);
+      delay(290);
+      servoPL1.write(90);
+      statoSbarraPL1 = SBARRA_ALZATA;
+    }
+  }
 }
 
 unsigned long simulaIngressi(unsigned long ingressiAttuali)
