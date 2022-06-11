@@ -4,7 +4,7 @@
 #define DATA_WIDTH NUMERO_DI_74HC165 * 8
 
 #undef INPUT_SERIAL
-#define SIMULATORE
+#undef SIMULATORE
 #undef SERVO360
 
 /*
@@ -17,11 +17,18 @@
 #define DATA_PIN 11
 #define CLOCK_PIN 12
 #else
-#define SENSOR_SX1 4
-#define SENSOR_SX2 5
-#define SENSOR_DX1 6
-#define SENSOR_DX2 7
+#define SENSOR_SX1 14
+#define SENSOR_SX2 15
+#define SENSOR_DX1 16
+#define SENSOR_DX2 17
 #endif
+
+#define SERVO_PL1     3
+#define SEMAFORO_PL1  LED_BUILTIN
+#define SERVO_PL2     5
+#define SEMAFORO_PL2  7
+#define SERVO_PL3     6
+#define SEMAFORO_PL3  10
 
 /*
  * Macro
@@ -64,13 +71,20 @@ byte statoSbarraPL3 = SBARRA_ALZATA;
 int contaAssiPL3 = 0;
 
 Servo servoPL1;
+Servo servoPL2;
+Servo servoPL3;
 
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
-  servoPL1.attach(3);
+  servoPL1.attach(SERVO_PL1);
+  pinMode(SEMAFORO_PL1, OUTPUT);
+  servoPL2.attach(SERVO_PL2);
+  pinMode(SEMAFORO_PL2, OUTPUT);
+  servoPL3.attach(SERVO_PL3);
+  pinMode(SEMAFORO_PL3, OUTPUT);
 
   // Configurazione linee per gestione shift register 74HC165
 #ifdef INPUT_SERIAL
@@ -221,6 +235,7 @@ unsigned long leggiSensoriPL()
 
 void movimentaPL()
 {
+  /* Gestione sbarre */
   if (contaAssiPL1 > 0)
   {
     // Abbassa sbarra
@@ -251,6 +266,11 @@ void movimentaPL()
     servoPL1.write(90);
 #endif
   }
+  /* Gestione semafori */
+  if ((SENS_PL(1, letturaSensori)) || (contaAssiPL1 > 0))
+    digitalWrite(SEMAFORO_PL1, HIGH);
+  else
+    digitalWrite(SEMAFORO_PL1, LOW);
 }
 
 unsigned long simulaIngressi(unsigned long ingressiAttuali)
