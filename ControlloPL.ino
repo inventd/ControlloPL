@@ -5,6 +5,7 @@
 
 #undef INPUT_SERIAL
 #define SIMULATORE
+#undef SERVO360
 
 /*
  * Defiinizione pin_out
@@ -223,6 +224,7 @@ void movimentaPL()
   if (contaAssiPL1 > 0)
   {
     // Abbassa sbarra
+#ifdef SERVO360
     if (statoSbarraPL1 == SBARRA_ALZATA)
     {
       servoPL1.write(70);
@@ -230,9 +232,14 @@ void movimentaPL()
       servoPL1.write(90);
       statoSbarraPL1 = SBARRA_ABBASSATA;
     }
-  } else
+#else
+    servoPL1.write(180);
+#endif
+  }
+  else
   {
     /* Alza la sbarra */
+#ifdef SERVO360
     if (statoSbarraPL1 == SBARRA_ABBASSATA)
     {
       servoPL1.write(110);
@@ -240,6 +247,9 @@ void movimentaPL()
       servoPL1.write(90);
       statoSbarraPL1 = SBARRA_ALZATA;
     }
+#else
+    servoPL1.write(90);
+#endif
   }
 }
 
