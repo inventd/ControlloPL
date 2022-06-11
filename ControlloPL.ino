@@ -12,23 +12,23 @@
  */
 #ifdef INPUT_SERIAL
 // gestione shift register
-#define LOAD_PIN 8
-#define ENABLE_PIN 9
-#define DATA_PIN 11
-#define CLOCK_PIN 12
+#define LOAD_PIN (uint8_t)8U
+#define ENABLE_PIN (uint8_t)9U
+#define DATA_PIN (uint8_t)11U
+#define CLOCK_PIN (uint8_t)12U
 #else
-#define SENSOR_SX1 14
-#define SENSOR_SX2 15
-#define SENSOR_DX1 16
-#define SENSOR_DX2 17
+#define SENSOR_SX1 (uint8_t)14U
+#define SENSOR_SX2 (uint8_t)15U
+#define SENSOR_DX1 (uint8_t)16U
+#define SENSOR_DX2 (uint8_t)17U
 #endif
 
-#define SERVO_PL1     3
-#define SEMAFORO_PL1  LED_BUILTIN
-#define SERVO_PL2     5
-#define SEMAFORO_PL2  7
-#define SERVO_PL3     6
-#define SEMAFORO_PL3  10
+#define SERVO_PL1 3
+#define SEMAFORO_PL1 LED_BUILTIN
+#define SERVO_PL2 5
+#define SEMAFORO_PL2 7
+#define SERVO_PL3 6
+#define SEMAFORO_PL3 10
 
 /*
  * Macro
@@ -96,10 +96,10 @@ void setup()
   digitalWrite(CLOCK_PIN, LOW);
   digitalWrite(LOAD_PIN, HIGH);
 #else
-  pinMode(SENSOR_SX1, INPUT);
-  pinMode(SENSOR_SX2, INPUT);
-  pinMode(SENSOR_DX1, INPUT);
-  pinMode(SENSOR_DX2, INPUT);
+  pinMode(SENSOR_SX1, INPUT_PULLUP);
+  pinMode(SENSOR_SX2, INPUT_PULLUP);
+  pinMode(SENSOR_DX1, INPUT_PULLUP);
+  pinMode(SENSOR_DX2, INPUT_PULLUP);
 #endif
 
   letturaSensori = leggiSensoriPL();
@@ -112,6 +112,7 @@ void loop()
   letturaSensori = simulaIngressi(oldLetturaSensori);
 #else
   letturaSensori = leggiSensoriPL();
+  // Serial.print("x");
 #endif
 
   if (letturaSensori != oldLetturaSensori)
@@ -222,11 +223,11 @@ unsigned long leggiSensoriPL()
 #else
   long bitValSX1, bitValSX2, bitValDX1, bitValDX2;
 
-  bitValSX1 = digitalRead(SENSOR_SX1);
-  bitValSX2 = digitalRead(SENSOR_SX2);
-  bitValDX1 = digitalRead(SENSOR_DX1);
-  bitValDX2 = digitalRead(SENSOR_DX2);
-  bytesVal = bitValSX1 | (bitValSX2 >> 1) | (bitValDX1 >> 2) | (bitValDX2 >> 3);
+  bitValSX1 = !digitalRead(SENSOR_SX1);
+  bitValSX2 = !digitalRead(SENSOR_SX2);
+  bitValDX1 = !digitalRead(SENSOR_DX1);
+  bitValDX2 = !digitalRead(SENSOR_DX2);
+  bytesVal = bitValSX1 | (bitValSX2 << 1) | (bitValDX1 << 2) | (bitValDX2 << 3);
   delayMicroseconds(85);
 #endif
 
