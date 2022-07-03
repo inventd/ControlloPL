@@ -55,10 +55,15 @@
 #define SENS_USCITA 0x02   // 0010
 #define SENS_FULL 0x03     // 0011
 
-typedef struct {
+#define VELOCITA_SBARRA 5
+
+typedef struct
+{
   byte statoPL;
   int contaAssi;
   Servo servoPL;
+  int costanteRitardo;
+  int contatoreRitardo;
   uint8_t semaforo;
 } PassaggioLivello;
 
@@ -75,23 +80,29 @@ void setup()
   passaggioLivello[0].contaAssi = 0;
   passaggioLivello[0].statoPL = 0;
   passaggioLivello[0].servoPL.attach(SERVO_PL1);
+  passaggioLivello[0].costanteRitardo = VELOCITA_SBARRA;
+  passaggioLivello[0].contatoreRitardo = VELOCITA_SBARRA;
   passaggioLivello[0].semaforo = SEMAFORO_PL1;
 
   passaggioLivello[1].contaAssi = 0;
   passaggioLivello[1].statoPL = 0;
   passaggioLivello[1].servoPL.attach(SERVO_PL2);
+  passaggioLivello[1].costanteRitardo = VELOCITA_SBARRA;
+  passaggioLivello[1].contatoreRitardo = VELOCITA_SBARRA;
   passaggioLivello[1].semaforo = SEMAFORO_PL2;
 
   passaggioLivello[2].contaAssi = 0;
   passaggioLivello[2].statoPL = 0;
   passaggioLivello[2].servoPL.attach(SERVO_PL3);
+  passaggioLivello[2].costanteRitardo = VELOCITA_SBARRA;
+  passaggioLivello[2].contatoreRitardo = VELOCITA_SBARRA;
   passaggioLivello[2].semaforo = SEMAFORO_PL3;
 
   for (size_t i = 0; i < NUMERO_MAX_PL; i++)
   {
     pinMode(passaggioLivello[i].semaforo, OUTPUT);
   }
-  
+
   // Configurazione linee per gestione shift register 74HC165
 #ifdef INPUT_SERIAL
   pinMode(LOAD_PIN, OUTPUT);
@@ -130,11 +141,10 @@ void cicloMacchinaStati(unsigned long statoIngressi)
   for (size_t i = 0; i < NUMERO_MAX_PL; i++)
   {
     passaggioLivello[i].statoPL =
-      cicloMacchinaPL(
-        passaggioLivello[i].statoPL,
-        SENS_PL(i, statoIngressi),
-        &(passaggioLivello[i].contaAssi)
-      );
+        cicloMacchinaPL(
+            passaggioLivello[i].statoPL,
+            SENS_PL(i, statoIngressi),
+            &(passaggioLivello[i].contaAssi));
   }
 }
 
@@ -246,14 +256,34 @@ void movimentaPL()
   for (size_t i = 0; i < NUMERO_MAX_PL; i++)
   {
     if (passaggioLivello[i].contaAssi > 0)
-      passaggioLivello[i].servoPL.write(180);
+      movimentaSbarra(i, LOW); // passaggioLivello[i].servoPL.write(180);
     else
-      passaggioLivello[i].servoPL.write(90);
+      movimentaSbarra(i, HIGH); // passaggioLivello[i].servoPL.write(90);
 
     if ((SENS_PL(i, letturaSensori)) || (passaggioLivello[i].contaAssi > 0))
       digitalWrite(passaggioLivello[i].semaforo, HIGH);
     else
       digitalWrite(passaggioLivello[i].semaforo, LOW);
+  }
+}
+
+void movimentaSbarra(uint8_t pl, boolean verso)
+{
+  passaggioLivello[pl].contatoreRitardo--;
+  if (passaggioLivello[pl].contatoreRitardo < 0)
+  {
+    passaggioLivello[pl].contatoreRitardo = passaggioLivello[pl].costanteRitardo;
+    int valoreServo = passaggioLivello[pl].servoPL.read();
+    if (verso)
+    {
+      valoreServo--;
+      passaggioLivello[pl].servoPL.write((valoreServo < 90) ? 90 : valoreServo);
+    }
+    else
+    {
+      valoreServo++;
+      passaggioLivello[pl].servoPL.write((valoreServo > 180) ? 180 : valoreServo);
+    }
   }
 }
 
