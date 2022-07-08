@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Servo.h>
 
+#undef DEBUG_VRS
+
 #define NUMERO_DI_74HC165 2
 #define DATA_WIDTH NUMERO_DI_74HC165 * 8
 
@@ -55,7 +57,7 @@
 #define SENS_USCITA 0x02   // 0010
 #define SENS_FULL 0x03     // 0011
 
-#define VELOCITA_SBARRA 5
+#define VELOCITA_SBARRA 50
 
 typedef struct
 {
@@ -69,13 +71,16 @@ typedef struct
 
 unsigned long letturaSensori;
 unsigned long oldLetturaSensori;
+uint8_t buffer[DATA_WIDTH];
 
 PassaggioLivello passaggioLivello[NUMERO_MAX_PL];
 
 void setup()
 {
   // put your setup code here, to run once:
+#ifdef DEBUG_VRS
   Serial.begin(9600);
+#endif
 
   passaggioLivello[0].contaAssi = 0;
   passaggioLivello[0].statoPL = 0;
@@ -125,15 +130,17 @@ void setup()
 
 void loop()
 {
-  letturaSensori = leggiSensoriPL();
+  letturaSensori = filtraIngressi(leggiSensoriPL());
 
   if (letturaSensori != oldLetturaSensori)
   {
     oldLetturaSensori = letturaSensori;
     cicloMacchinaStati(letturaSensori);
-    movimentaPL();
+#ifdef DEBUG_VRS
     visualizzaStato();
+#endif
   }
+  movimentaPL();
 }
 
 void cicloMacchinaStati(unsigned long statoIngressi)
@@ -248,6 +255,7 @@ unsigned long leggiSensoriPL()
   delayMicroseconds(85);
 #endif
 
+  bytesVal = filtraIngressi(bytesVal);
   return (bytesVal);
 }
 
@@ -256,9 +264,9 @@ void movimentaPL()
   for (size_t i = 0; i < NUMERO_MAX_PL; i++)
   {
     if (passaggioLivello[i].contaAssi > 0)
-      movimentaSbarra(i, LOW); // passaggioLivello[i].servoPL.write(180);
+      movimentaSbarra(i, LOW); // abbassa la sbarra
     else
-      movimentaSbarra(i, HIGH); // passaggioLivello[i].servoPL.write(90);
+      movimentaSbarra(i, HIGH); // alza la sbarra
 
     if ((SENS_PL(i, letturaSensori)) || (passaggioLivello[i].contaAssi > 0))
       digitalWrite(passaggioLivello[i].semaforo, HIGH);
@@ -287,6 +295,27 @@ void movimentaSbarra(uint8_t pl, boolean verso)
   }
 }
 
+unsigned long filtraIngressi(unsigned long ingresso)
+{
+  unsigned long ingressoFiltrato = oldLetturaSensori;
+  for (size_t i = 0; i < DATA_WIDTH; i++)
+  {
+    buffer[i] = (buffer[i] << 1) | bitRead(ingresso, i);
+    if (buffer[i] == 0xFF)
+    {
+      bitSet(ingressoFiltrato, i);
+    }
+    else if (buffer[i] == 0)
+    {
+      bitClear(ingressoFiltrato, i);
+    }
+  }
+
+  return ingressoFiltrato;
+}
+
+#ifdef DEBUG_VRS
+
 #define FRMT_BIN_8(I) ("000000000000" + String(I, BIN)).substring(String(I, BIN).length())
 
 void visualizzaStato()
@@ -302,3 +331,4 @@ void visualizzaStato()
   }
   Serial.println();
 }
+#endif
