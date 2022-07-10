@@ -255,7 +255,6 @@ unsigned long leggiSensoriPL()
   delayMicroseconds(85);
 #endif
 
-  bytesVal = filtraIngressi(bytesVal);
   return (bytesVal);
 }
 
